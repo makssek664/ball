@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            #canvas {
+                border-style: solid;
+                border-color: black;
+                border-width: 3px;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas" width="500" height="500">
+
+        </canvas>
+        <script>
+            canvas = document.querySelector("#canvas");
+            ctx = canvas.getContext("2d");
+            const pos = {x: 40, y: 40};
+            const factor = {x: 1, y: 1};
+
+
+            const Hitreg = class {
+                constructor(x, y, w, h) {
+                    this.x = x;
+                    this.y = y;
+                    this.w = w;
+                    this.h = h;
+                    this.ignore = false;
+                }
+                collidesWithOther(other) {
+                    if(other == null) {
+                        return null;
+                    }
+                    if(other.ignore == true) {
+                        return -1;
+                    }
+                    return (this.x < other.x + other.w && this.x + this.w > other.x && this.y < other.y + other.h && this.y + this.h > other.y);
+                }
+                setpos(x, y) {
+                    this.x = x;
+                    this.y = y;
+                }
+            };
+
+            const Platform = class extends Hitreg { 
+                constructor() {
+                    const STARTX = 160;
+                    const STARTY = 180;
+                    const STARTW = 180;
+                    const STARTH = 20;
+                    super(STARTX, STARTY, STARTW, STARTH);      
+                    this.x = 160;
+                    this.width = 180;
+                    this.HEIGHT = 20;
+                    this.Y = 350;
+                }
+                draw(){
+                    ctx.beginPath();
+                    ctx.rect(this.x, this.Y, this.width, this.HEIGHT);
+                    ctx.fill();
+                    ctx.closePath();
+                }
+                add(x) {
+                    this.x += x;
+                    super.setpos(this.x, this.Y);
+                }
+
+            };
+            const platform = new Platform;
+            const Block = class extends Hitreg {
+                
+                constructor() {
+                    super(50, 150, 80, 80);
+                    this.X = 50;
+                    this.Y = 150;
+                    this.W = 80;
+                    this.H = 80;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.rect(this.X, this.Y, this.W, this.H);
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+
+            let block = new Block;
+
+            const Ball = class extends Hitreg {
+                constructor() {
+                    const STARTX = 200;
+                    const STARTY = 200;
+                    const STARTR = 30;
+                    super(STARTX, STARTY, STARTY, STARTR);
+                    this.x = STARTX;
+                    this.y = STARTY;
+                    this.r = STARTR;
+                }
+
+                addpos(x, y) {
+                    this.x += x;
+                    this.y += y;
+                    super.setpos(this.x, this.y);
+                }
+
+                invertx() {
+                    this.x *= -1;
+                }
+                inverty() {
+                    this.y *= -1;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, false);
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            };
+
+            document.addEventListener("keydown", (e) => {
+                console.log(e.code);
+                switch(e.code) {
+                    case "KeyA": 
+                    if(platform.x != 0) {
+                        platform.x -= 20;
+                    }
+                    break;
+                    case "KeyD":
+                    if(platform.x != canvas.width - platform.width) {
+                        platform.add(20);
+                    }
+                    break;
+                }
+            })
+
+            const ball = new Ball;
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                platform.draw();
+                if(block != null) {
+                    block.draw();
+                }
+                ball.draw();
+                ball.addpos(factor.x, factor.y);
+                if((ball.x === canvas.width - 30) || (ball.x === 30)) {
+                    factor.x *= -1;
+                }
+                if((ball.collidesWithOther(platform))) {
+                    if(Math.floor(Math.random()*100)%2 == 1) {
+                        factor.x *= -1;
+                    }
+                }
+                if(ball.y === canvas.height - 30 || ball.y === 30 || ball.collidesWithOther(platform)) {
+                    factor.y *= -1;
+                }
+                if(ball.collidesWithOther(block)) {
+                    block = null;
+                }
+
+                requestAnimationFrame(animate);
+            }
+            animate();
+        </script>
+    </body>
+</html>
